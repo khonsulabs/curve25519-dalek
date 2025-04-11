@@ -10,3 +10,6 @@ resolver = "2"
 [profile.dev]
 opt-level = 2
 
+[patch.crates-io]
+group = { git = "https://github.com/pinkforest/group.git", branch = "bump-rand-0.9" }
+ff = { git = "https://github.com/zkcrypto/ff.git", branch = "release-0.14.0" }

@@ -131,7 +131,7 @@ use group::ff::{FieldBits, PrimeFieldBits};
 use rand_core::RngCore;
 
 #[cfg(any(test, feature = "rand_core"))]
-use rand_core::CryptoRngCore;
+use rand_core::CryptoRng;
 
 #[cfg(feature = "digest")]
 use digest::generic_array::typenum::U64;
@@ -594,7 +594,7 @@ impl Scalar {
     /// let mut csprng = OsRng;
     /// let a: Scalar = Scalar::random(&mut csprng);
     /// # }
-    pub fn random<R: CryptoRngCore + ?Sized>(rng: &mut R) -> Self {
+    pub fn random<R: CryptoRng + ?Sized>(rng: &mut R) -> Self {
         let mut scalar_bytes = [0u8; 64];
         rng.fill_bytes(&mut scalar_bytes);
         Scalar::from_bytes_mod_order_wide(&scalar_bytes)
@@ -1213,11 +1213,18 @@ impl Field for Scalar {
     const ZERO: Self = Self::ZERO;
     const ONE: Self = Self::ONE;
 
-    fn random(mut rng: impl RngCore) -> Self {
+    fn random<R: RngCore + ?Sized>(rng: &mut R) -> Self {
         // NOTE: this is duplicated due to different `rng` bounds
         let mut scalar_bytes = [0u8; 64];
         rng.fill_bytes(&mut scalar_bytes);
         Self::from_bytes_mod_order_wide(&scalar_bytes)
+    }
+
+    fn try_from_rng<R: rand_core::TryRngCore + ?Sized>(rng: &mut R) -> Result<Self, R::Error> {
+        // NOTE: this is duplicated due to different `rng` bounds
+        let mut scalar_bytes = [0u8; 64];
+        rng.try_fill_bytes(&mut scalar_bytes)?;
+        Ok(Self::from_bytes_mod_order_wide(&scalar_bytes))
     }
 
     fn square(&self) -> Self {
